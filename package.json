@@ -1,6 +1,6 @@
 {
-  "name": "sensorthings",
-  "version": "1.0.0",
+  "name": "@vcmap/sensorthings",
+  "version": "1.0.0-rc.0",
   "description": "Displays sensor data from SensorThings API as a VectorTiles Layer in the Map",
   "type": "module",
   "main": "dist/index.js",
@@ -45,14 +45,18 @@
   ],
   "prettier": "@vcsuite/eslint-config/prettier.js",
   "peerDependencies": {
-    "@vcmap/core": "^6.0.6",
-    "@vcmap/ui": "^6.0.9",
+    "@vcmap/core": "^6.1.0-rc.3",
+    "@vcmap/ui": "^6.1.0-rc.2",
     "ol": "^10.2.1",
     "vue": "~3.4.38",
     "vuetify": "^3.7.4"
   },
+  "overrides": {
+    "@vcmap/core": "^6.1.0-rc.3",
+    "@vcmap/ui": "^6.1.0-rc.2"
+  },
   "devDependencies": {
-    "@vcmap/plugin-cli": "^4.0.1",
+    "@vcmap/plugin-cli": "^4.0.2",
     "@vcsuite/eslint-config": "^3.0.8",
     "@vitest/coverage-v8": "^2.1.4",
     "jest-canvas-mock": "^2.5.2",
@@ -62,5 +66,10 @@
     "vitest": "^2.1.4",
     "vue-tsc": "^2.1.10"
   },
-  "mapVersion": "^6.0"
+  "mapVersion": "^6.1",
+  "dependencies": {
+    "@vcsuite/logger": "^1.0.1",
+    "apexcharts": "^4.0.0",
+    "vue3-apexcharts": "^1.7.0"
+  }
 }
