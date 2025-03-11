@@ -28,21 +28,49 @@
         <v-col cols="6">
           <VcsTextField
             :id="`${cid}-url`"
-            clearable
             v-model="localConfig.url"
+            clearable
+            class="pr-1 py-1"
             placeholder="https://example.org"
+            :rules="[
+              (v: string | undefined) =>
+                !v ||
+                isValidUrl(v) ||
+                'sensorthings.editors.validation.validUrl',
+            ]"
+          >
+            <template #append>
+              <v-dialog max-width="500">
+                <template #activator="{ props: activatorProps }">
+                  <VcsButton
+                    icon="$vcsEdit"
+                    tooltip="sensorthings.editors.dashboard.editQueryParams"
+                    v-bind="activatorProps"
+                    :disabled="!isValidUrl(localConfig.url)"
+                  />
+                </template>
+                <QueryParamsTable v-model="localConfig.url!" />
+              </v-dialog>
+            </template>
+          </VcsTextField>
+        </v-col>
+      </v-row>
+      <v-row no-gutters>
+        <v-col>
+          <VcsCheckbox
+            v-model="enableDashboardMapping"
+            label="sensorthings.editors.dashboard.mapping"
+            :true-value="true"
+            :false-value="false"
           />
         </v-col>
       </v-row>
-    </v-container>
-    <v-divider />
-    <v-container class="py-0 px-0">
-      <v-row no-gutters>
-        <v-col class="px-0">
+      <v-row no-gutters v-if="localConfig.thingDashboardMapping" class="pa-1">
+        <v-col>
           <v-form v-model="csvInputValidity">
             <VcsDataTable
-              v-if="tableItems"
-              :items="tableItems"
+              v-if="dashboardMappingItems"
+              :items="dashboardMappingItems"
               :headers="[
                 { title: 'sensorthings.id', key: 'id' },
                 {
@@ -56,8 +84,8 @@
                   align: 'end',
                 },
               ]"
-              :show-searchbar="false"
-              items-per-page="5"
+              :items-per-page="5"
+              :no-data-text="$st('sensorthings.editors.dashboard.tableNoData')"
             >
               <template #item.actions="{ item }">
                 <VcsActionButtonList :actions="item.actions" right />
@@ -122,14 +150,7 @@
     ref,
     watch,
   } from 'vue';
-  import {
-    VContainer,
-    VRow,
-    VCol,
-    VDialog,
-    VForm,
-    VDivider,
-  } from 'vuetify/components';
+  import { VContainer, VRow, VCol, VDialog, VForm } from 'vuetify/components';
   import type { VcsAction, VcsUiApp } from '@vcmap/ui';
   import {
     useComponentId,
@@ -140,12 +161,15 @@
     VcsActionButtonList,
     useProxiedComplexModel,
     NotificationType,
+    VcsButton,
+    VcsCheckbox,
   } from '@vcmap/ui';
   import {
     parseId,
     type DashboardFeatureInfoViewOptions,
   } from '../dashboardFeatureInfoView.js';
   import CsvImport from './CsvImport.vue';
+  import QueryParamsTable from './QueryParamsTable.vue';
 
   function isValidValue(v?: string | number): v is string | number {
     return !!v || v === 0;
@@ -158,14 +182,16 @@
       VRow,
       VCol,
       VForm,
+      VDialog,
       VcsFormSection,
       VcsLabel,
       VcsTextField,
       VcsDataTable,
       VcsActionButtonList,
-      VDialog,
-      VDivider,
+      VcsButton,
+      VcsCheckbox,
       CsvImport,
+      QueryParamsTable,
     },
     props: {
       modelValue: {
@@ -185,17 +211,18 @@
           emit,
         );
 
-      if (!localConfig.value.thingDashboardMapping) {
-        localConfig.value.thingDashboardMapping = [];
-      }
-
-      const tableItems = computed(
-        (): {
-          id: number | string;
-          dashboard: number | string;
-          actions: VcsAction[];
-        }[] => {
-          return localConfig.value.thingDashboardMapping!.map((item, index) => {
+      const dashboardMappingItems = computed(
+        ():
+          | {
+              id: number | string;
+              dashboard: number | string;
+              actions: VcsAction[];
+            }[]
+          | undefined => {
+          if (!localConfig.value.thingDashboardMapping) {
+            return undefined;
+          }
+          return localConfig.value.thingDashboardMapping.map((item, index) => {
             return {
               id: item[0],
               dashboard: item[1],
@@ -238,6 +265,9 @@
           document.getElementById('dashboard-mapping-thing-id')?.focus();
         }
       }
+      const enableDashboardMapping = ref(
+        !!localConfig.value.thingDashboardMapping,
+      );
       const dashboardMappingUploadDialog = ref(false);
       const dashboardMappingEntryActions = ref<VcsAction[]>([
         {
@@ -266,6 +296,9 @@
           },
         },
       ]);
+      watch(enableDashboardMapping, (newValue) => {
+        localConfig.value.thingDashboardMapping = newValue ? [] : undefined;
+      });
       watch(
         [dashboardMappingEntry, csvInputValidity],
         () => {
@@ -282,7 +315,11 @@
         localConfig,
         nonEmpty: (v: string): boolean | string =>
           (v && v !== '') || 'sensorthings.editors.dashboard.emptySrc',
-        tableItems,
+        enableDashboardMapping,
+        dashboardMappingItems,
+        dashboardMappingEntry,
+        dashboardMappingEntryActions,
+        dashboardMappingUploadDialog,
         addEntry,
         csvInputValidity,
         addCsvEntries(data: (string | number)[][]): void {
@@ -316,12 +353,21 @@
             localConfig.value.thingDashboardMapping = Array.from(uniqueData);
           }
         },
-        dashboardMappingEntry,
-        dashboardMappingEntryActions,
-        dashboardMappingUploadDialog,
+        isValidUrl(v: string | undefined): boolean {
+          return !!v && URL.canParse(v);
+        },
       };
     },
   });
 </script>
 
-<style scoped></style>
+<style scoped lang="scss">
+  :deep(.vcs-table > .v-table__wrapper) {
+    td {
+      word-break: break-all;
+    }
+  }
+  :deep(.v-expansion-panel-text__wrapper) {
+    padding-inline: 0;
+  }
+</style>

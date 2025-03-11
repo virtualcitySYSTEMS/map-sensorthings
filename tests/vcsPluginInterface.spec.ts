@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { VcsPlugin } from '@vcmap/ui';
 import { VcsUiApp, loadPlugin, isValidPackageName } from '@vcmap/ui';
+import { moduleIdSymbol } from '@vcmap/core';
 import plugin from '../src/index.js';
 import packageJSON from '../package.json';
 
@@ -26,13 +27,18 @@ window.VcsPluginLoaderFunction = (
 const testPropSymbol = Symbol('testProp');
 
 describe('VcsPlugin Interface test', () => {
-  let pluginInstance: TestPluginInstance | null;
+  let pluginInstance:
+    | (TestPluginInstance & { [moduleIdSymbol]: string })
+    | null;
 
   beforeAll(async () => {
     pluginInstance = await loadPlugin(packageJSON.name, {
       name: packageJSON.name,
       entry: '_dev',
     });
+    if (pluginInstance) {
+      pluginInstance[moduleIdSymbol] = 'module';
+    }
   });
 
   afterAll(() => {
@@ -113,7 +119,9 @@ describe('VcsPlugin Interface test', () => {
   describe('shadowing a plugin', () => {
     let app: VcsUiApp;
     let pluginInstance2:
-      | (TestPluginInstance & { [testPropSymbol]?: string })
+      | (TestPluginInstance & {
+          [testPropSymbol]?: string;
+        })
       | null;
 
     beforeAll(async () => {

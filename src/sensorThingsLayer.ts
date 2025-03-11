@@ -12,6 +12,7 @@ export type SensorThingsOptions = Omit<
 > & {
   url: string;
   observedProperty?: string;
+  additionalFilters?: string;
 };
 
 export type ThingFeatureProperties = {
@@ -19,7 +20,7 @@ export type ThingFeatureProperties = {
 } & Record<string, unknown>;
 
 function getSensorIconDataUrl(): string {
-  return `data:image/svg+xml,%3Csvg%20width%3D%2260.5%22%20height%3D%22100.25%22%20viewBox%3D%220%200%2032.015%2053.049%22%20xml%3Aspace%3D%22preserve%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20transform%3D%22translate(.047%20-.06)%22%3E%3Crect%20style%3D%22fill%3A%23005434%3Bfill-opacity%3A1%3Bstroke%3A%23fff%3Bstroke-width%3A.197361%3Bstroke-linecap%3Around%3Bstroke-linejoin%3Around%3Bstroke-dasharray%3Anone%3Bstroke-opacity%3A1%22%20width%3D%2231.817%22%20height%3D%2220.567%22%20x%3D%22.051%22%20y%3D%22.16%22%20ry%3D%22.983%22%2F%3E%3Ctext%20xml%3Aspace%3D%22preserve%22%20style%3D%22font-style%3Anormal%3Bfont-variant%3Anormal%3Bfont-weight%3A700%3Bfont-stretch%3Anormal%3Bfont-size%3A7.46459px%3Bfont-family%3ABahnschrift%3B-inkscape-font-specification%3A%26quot%3BBahnschrift%20Bold%26quot%3B%3Bfill%3A%23fff%3Bfill-opacity%3A1%3Bstroke%3A%23fff%3Bstroke-width%3A0%3Bstroke-linecap%3Around%3Bstroke-linejoin%3Around%3Bstroke-dasharray%3Anone%3Bstroke-opacity%3A1%22%20x%3D%223.746%22%20y%3D%2212.837%22%20transform%3D%22scale(1.02422%20.97635)%22%3E%3Ctspan%20style%3D%22font-style%3Anormal%3Bfont-variant%3Anormal%3Bfont-weight%3A700%3Bfont-stretch%3Anormal%3Bfont-size%3A7.46459px%3Bfont-family%3ABahnschrift%3B-inkscape-font-specification%3A%26quot%3BBahnschrift%20Bold%26quot%3B%3Bfill%3A%23fff%3Bstroke%3A%23fff%3Bstroke-width%3A0%3Bstroke-dasharray%3Anone%3Bstroke-opacity%3A1%22%20x%3D%223.746%22%20y%3D%2212.837%22%3ESensor%20%3C%2Ftspan%3E%3C%2Ftext%3E%3Cpath%20style%3D%22fill%3A%23005434%3Bfill-opacity%3A1%3Bstroke%3A%23005434%3Bstroke-width%3A.702471%3Bstroke-linecap%3Abutt%3Bstroke-linejoin%3Around%3Bstroke-dasharray%3Anone%3Bstroke-opacity%3A1%22%20d%3D%22M15.96%2020.561V53.11%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E`;
+  return `data:image/svg+xml,%3Csvg%20width%3D%2240.821%22%20height%3D%2251.946%22%20viewBox%3D%220%200%2010.801%2013.744%22%20xml%3Aspace%3D%22preserve%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20transform%3D%22translate(-1.45)scale(.26)%22%3E%3Cpath%20style%3D%22fill%3A%23fff%3Bstroke%3A%2328a5de%3Bstroke-width%3A.40518%3Bstroke-linecap%3Asquare%22%20cx%3D%22449.283%22%20cy%3D%22357.57%22%20r%3D%22290%22%20d%3D%22M42.817%2020.709A16.796%2016.796%200%200%201%2026.021%2037.505A16.796%2016.796%200%200%201%209.225%2020.709A16.796%2016.796%200%200%201%2042.817%2020.709z%22%2F%3E%3Cpath%20d%3D%22M7.074%2028.124c2.085%206.238%207.06%2015.354%2018.91%2023.821%2011.85%20-8.473%2016.819%20-17.584%2018.904%20-23.821%200.944%20-2.317%201.471%20-4.842%201.494%20-7.489%200.006%20-0.122%20-0.012%20-0.197%20-0.012%20-0.214v-0.006C46.371%209.139%2037.243%200%2025.972%200c-11.276%200%20-20.41%209.139%20-20.41%2020.416%200%200%200%200.075%200.006%200.22%200.029%202.647%200.562%205.172%201.506%207.489m18.91%20-23.091c8.688%200%2015.73%207.043%2015.73%2015.73s-7.043%2015.73%20-15.73%2015.73c-8.688%200%20-15.73%20-7.043%20-15.73%20-15.73s7.043%20-15.73%2015.73%20-15.73%22%20style%3D%22fill%3A%23409d76%3Bfill-opacity%3A1%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E`;
 }
 
 export class SensorThingsLayer extends VectorTileLayer {
@@ -49,7 +50,9 @@ export class SensorThingsLayer extends VectorTileLayer {
     };
   }
 
-  private _observedProperty: string | undefined;
+  private _observedProperty?: string;
+
+  private _additionalFilters?: string;
 
   constructor(options: SensorThingsOptions) {
     const defaultOptions = SensorThingsLayer.getDefaultOptions();
@@ -63,6 +66,7 @@ export class SensorThingsLayer extends VectorTileLayer {
     super(mergedOptions);
 
     this._observedProperty = options.observedProperty;
+    this._additionalFilters = options.additionalFilters;
   }
 
   async initialize(): Promise<void> {
@@ -72,6 +76,7 @@ export class SensorThingsLayer extends VectorTileLayer {
           this.url,
           this._observedProperty,
           this.extent ?? undefined,
+          this._additionalFilters,
         );
         if (things.length === 0) {
           this.getLogger().warning(
@@ -115,11 +120,18 @@ export class SensorThingsLayer extends VectorTileLayer {
     return this._observedProperty;
   }
 
+  get additionalFilters(): string | undefined {
+    return this._additionalFilters;
+  }
+
   toJSON(): SensorThingsOptions {
     const { tileProvider, ...rest } = super.toJSON();
     const json: SensorThingsOptions = { ...rest, url: this.url };
     if (this._observedProperty) {
       json.observedProperty = this._observedProperty;
+    }
+    if (this._additionalFilters) {
+      json.additionalFilters = this._additionalFilters;
     }
     return json;
   }

@@ -28,27 +28,39 @@
         <v-col>
           <VcsDatePicker
             v-model="startDate"
-            :date-picker-props="{ max: new Date().toISOString() }"
+            :date-picker-props="{
+              min: calenderMinMax[0],
+              max: calenderMinMax[1],
+            }"
           />
         </v-col>
         <v-col cols="2">
           <VcsLabel>{{ $st('sensorthings.to') }}</VcsLabel>
         </v-col>
-        <v-col class="d-flex align-center">
-          {{ new Date().toLocaleDateString() }}
+        <v-col>
+          <VcsDatePicker
+            v-model="endDate"
+            :date-picker-props="{
+              min: startDate,
+              max: calenderMinMax[1],
+            }"
+          />
         </v-col>
       </v-row>
     </v-container>
     <v-row no-gutters class="pb-3">
       <v-col>
-        <apex-chart
-          id="test"
-          type="line"
-          :options="chartOptions"
-          :series="chartSeries"
-        />
+        <apex-chart type="line" :options="chartOptions" :series="chartSeries" />
       </v-col>
     </v-row>
+    <v-overlay
+      :model-value="loadingData"
+      contained
+      persistent
+      class="d-flex justify-center align-center"
+    >
+      <v-icon size="x-large" color="primary"> $vcsProgress </v-icon>
+    </v-overlay>
   </div>
 </template>
 
@@ -62,30 +74,57 @@
     watch,
     getCurrentInstance,
   } from 'vue';
-  import { VRow, VCol, VDivider, VContainer } from 'vuetify/components';
+  import {
+    VRow,
+    VCol,
+    VDivider,
+    VContainer,
+    VOverlay,
+    VIcon,
+  } from 'vuetify/components';
   import ApexChart from 'vue3-apexcharts';
   import type { ApexOptions } from 'apexcharts';
+  import de from 'apexcharts/dist/locales/de.json';
+  import en from 'apexcharts/dist/locales/en.json';
   import type { VcsUiApp } from '@vcmap/ui';
-  import { VcsDatePicker, VcsLabel } from '@vcmap/ui';
+  import { NotificationType, VcsDatePicker, VcsLabel } from '@vcmap/ui';
   import { getLogger } from '@vcsuite/logger';
   import { useTheme } from 'vuetify';
   import type {
     SensorThingsLayer,
     ThingFeatureProperties,
   } from './sensorThingsLayer.js';
+  import type {
+    DatastreamWithObservations,
+    ObservationEntity,
+  } from './sensorThingsAPI.js';
   import {
     queryDatastreamsWithObservations,
-    type DatastreamEntity,
-    type ObservationEntity,
+    queryDatastreamWithLatestObservation,
+    queryFirstObservation,
   } from './sensorThingsAPI.js';
   import { name } from '../package.json';
 
   const maxObservations = 1000;
 
-  function calcInitialStartDate(initialDayObservationRange: number): Date {
+  function calcInitialStartDate(
+    latestPhenomenonTime: Date,
+    initialDayObservationRange: number,
+  ): Date {
     return new Date(
-      new Date().getTime() - initialDayObservationRange * 24 * 60 * 60 * 1000,
+      latestPhenomenonTime.getTime() -
+        initialDayObservationRange * 24 * 60 * 60 * 1000,
     );
+  }
+
+  /**
+   * This function ensures a single point of time. In case phenomenon time is time span it just returns start time. Otherwise returns input string.
+   * @param phenomenonTime Time or start time of time span.
+   */
+  function ensurePointInTime(phenomenonTime: string): string {
+    return phenomenonTime.indexOf('/') === -1
+      ? phenomenonTime
+      : phenomenonTime.slice(0, phenomenonTime.indexOf('/'));
   }
 
   /**
@@ -93,7 +132,7 @@
    * @param datastreams The Datastreams with their Observations in descending order
    */
   function convertDatastreamsToSeries(
-    datastreams: (DatastreamEntity & { Observations: ObservationEntity[] })[],
+    datastreams: DatastreamWithObservations[],
   ): ApexAxisChartSeries {
     return datastreams.map((datastream) => {
       return {
@@ -101,10 +140,8 @@
         data: datastream.Observations.slice()
           .reverse()
           .map((observation) => {
-            return [
-              new Date(observation.phenomenonTime).getTime(),
-              observation.result,
-            ];
+            const time = ensurePointInTime(observation.phenomenonTime);
+            return [new Date(time).getTime(), observation.result];
           }),
       };
     });
@@ -120,6 +157,8 @@
       ApexChart,
       VcsLabel,
       VcsDatePicker,
+      VOverlay,
+      VIcon,
     },
     props: {
       featureId: {
@@ -144,58 +183,68 @@
       const app = inject('vcsApp') as VcsUiApp;
       const theme = useTheme();
 
-      const startDate = ref(
-        calcInitialStartDate(props.initialDayObservationRange),
-      );
+      const startDate = ref<Date | undefined>();
+      const endDate = ref<Date | undefined>();
       const chartSeries = ref<ApexAxisChartSeries>([]);
       const yAxisTitle = ref<string | undefined>();
       const latestUnitSymbol = ref<string | undefined>();
+      const latestObservation = ref<ObservationEntity | undefined>();
+      const observedProperty = ref<string | undefined>();
+      const loadingData = ref(false);
       const chartOptions = computed(
-        () =>
-          ({
-            xaxis: {
-              type: 'datetime',
-              title: { text: vm.$st('sensorthings.chart.time') },
+        (): ApexOptions => ({
+          chart: {
+            id: 'sensorthings-chart',
+            locales: [de, en],
+            defaultLocale: vm.$i18n.locale,
+          },
+          xaxis: {
+            type: 'datetime',
+            title: { text: vm.$st('sensorthings.chart.time') },
+            labels: {
+              datetimeUTC: false,
             },
-            yaxis: {
+          },
+          yaxis: {
+            title: {
+              text: vm.$st(yAxisTitle.value || 'sensorthings.chart.count'),
+            },
+          },
+          stroke: {
+            width: 2,
+          },
+          tooltip: {
+            x: {
+              format: 'dd MMM HH:mm',
+            },
+            y: {
               title: {
-                text: vm.$st(yAxisTitle.value || 'sensorthings.chart.count'),
-              },
-            },
-            stroke: {
-              width: 2,
-            },
-            tooltip: {
-              x: {
-                format: 'dd MMM HH:mm',
-              },
-              y: {
-                title: {
-                  formatter(): string {
-                    return '';
-                  },
+                formatter(): string {
+                  return '';
                 },
               },
             },
-            theme: {
-              mode: theme.global.name.value,
-            },
-          }) as ApexOptions,
+          },
+          theme: {
+            mode: theme.global.name.value as 'light' | 'dark',
+          },
+        }),
       );
-      const latestObservation = ref<ObservationEntity | undefined>();
-      const observedProperty = ref<string | undefined>();
+      const calenderMinMax = ref<string[]>([]);
 
-      async function updateData(): Promise<void> {
+      async function updateChartData(): Promise<void> {
         const layer = app.layers.getByKey(props.layerName) as SensorThingsLayer;
-        if (!layer?.observedProperty) {
-          throw new Error('Layer does not exist or has no observed property');
+
+        if (!observedProperty.value || !startDate.value || !endDate.value) {
+          throw new Error('Input data for datastreams query is missing');
         }
-        observedProperty.value = layer.observedProperty;
+
         const datastreams = await queryDatastreamsWithObservations(
           layer.url,
           props.featureId,
-          layer.observedProperty,
+          observedProperty.value,
           startDate.value,
+          endDate.value,
           maxObservations,
         );
 
@@ -205,48 +254,118 @@
           );
         }
 
-        yAxisTitle.value = datastreams[0]?.unitOfMeasurement.name;
-        latestUnitSymbol.value = datastreams[0]?.unitOfMeasurement.symbol;
-        latestObservation.value = datastreams[0]?.Observations[0];
         chartSeries.value = convertDatastreamsToSeries(datastreams);
 
-        if (
-          datastreams.some(
-            (datastream) => datastream.Observations.length >= maxObservations,
-          )
-        ) {
-          app.notifier.add({
-            message: vm.$st('sensorthings.limitedObservations', {
-              maxObservations,
-            }),
-            type: 'warning',
-            timeout: 5000,
-          });
+        datastreams.forEach((datastream) => {
+          if (datastream.Observations.length >= maxObservations) {
+            app.notifier.add({
+              message: vm.$st('sensorthings.limitedObservations', {
+                datastream: datastream.name,
+                maxObservations,
+              }),
+              type: NotificationType.WARNING,
+              timeout: -1,
+            });
+          } else if (!datastream.Observations.length) {
+            app.notifier.add({
+              message: vm.$st('sensorthings.noObservations'),
+              type: NotificationType.INFO,
+              timeout: -1,
+            });
+          }
+        });
+      }
+
+      async function updateGeneralData(): Promise<void> {
+        const layer = app.layers.getByKey(props.layerName) as SensorThingsLayer;
+        if (!layer?.observedProperty) {
+          throw new Error('Layer does not exist or has no observed property');
         }
+        observedProperty.value = layer.observedProperty;
+
+        const datastreamWithLatestObservation =
+          await queryDatastreamWithLatestObservation(
+            layer.url,
+            props.featureId,
+            layer.observedProperty,
+          );
+        yAxisTitle.value =
+          datastreamWithLatestObservation.unitOfMeasurement.name;
+        latestUnitSymbol.value =
+          datastreamWithLatestObservation.unitOfMeasurement.symbol;
+
+        latestObservation.value =
+          datastreamWithLatestObservation.Observations[0];
+
+        endDate.value = new Date(
+          ensurePointInTime(latestObservation.value.phenomenonTime),
+        );
+        startDate.value = calcInitialStartDate(
+          endDate.value,
+          props.initialDayObservationRange,
+        );
+
+        queryFirstObservation(
+          layer.url,
+          props.featureId,
+          layer.observedProperty,
+        )
+          .then((observation) => {
+            calenderMinMax.value[0] = ensurePointInTime(
+              observation.phenomenonTime,
+            );
+            if (latestObservation.value) {
+              calenderMinMax.value[1] = ensurePointInTime(
+                latestObservation.value.phenomenonTime,
+              );
+            }
+          })
+          .catch((e) => {
+            getLogger(name).warning(`Querying first observation failed`, e);
+          });
       }
 
       watch(
-        [(): string => props.featureId, startDate],
+        (): string => props.featureId,
         async () => {
-          await updateData();
+          loadingData.value = true;
+          await updateGeneralData();
+          loadingData.value = false;
         },
         { immediate: true },
       );
+
+      watch([startDate, endDate], async () => {
+        if (
+          startDate.value &&
+          endDate.value &&
+          startDate.value > endDate.value
+        ) {
+          const newEndDate = new Date(startDate.value);
+          endDate.value = newEndDate;
+        }
+        await updateChartData();
+      });
 
       return {
         chartOptions,
         chartSeries,
         startDate,
+        endDate,
         observedProperty,
         latestObservationValue: computed(
           () => latestObservation.value?.result ?? '-',
         ),
         latestUnitSymbol,
-        latestObservationTime: computed(() =>
-          latestObservation.value
-            ? new Date(latestObservation.value.phenomenonTime).toLocaleString()
-            : '-',
-        ),
+        latestObservationTime: computed(() => {
+          return latestObservation.value
+            ? new Date(
+                ensurePointInTime(latestObservation.value.phenomenonTime),
+              ).toLocaleString(vm.$i18n.locale)
+            : '-';
+        }),
+        calenderMinMax,
+        loadingData,
       };
     },
   });

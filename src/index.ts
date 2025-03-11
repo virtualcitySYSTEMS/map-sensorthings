@@ -138,10 +138,15 @@ export default function plugin(): VcsPlugin<
           observedProperty: 'Observed property',
           latestObservation: 'Latest observation',
           limitedObservations:
-            'Number of observations reached limit of: {maxObservations}. Only the last {maxObservations} observations are shown.',
+            'Number of observations reached limit of: {maxObservations} for "{datastream}". Only the first {maxObservations} observations are shown.',
+          noObservations:
+            'No observations found for the requested interval. Please change time span.',
           chart: {
             time: 'Time',
             count: 'Count',
+          },
+          dashboard: {
+            openInNewTab: 'Open dashboard in new tab',
           },
           editors: {
             title: {
@@ -161,6 +166,13 @@ export default function plugin(): VcsPlugin<
               uploadEntries: 'Upload entries from a CSV file',
               importFeedback: `Filtered {numberInvalid} row(s) due to invalid data and {numberDublicate} row(s) due to dublicates.`,
               dashboardUrl: 'Dashboard URL (path)',
+              editQueryParams: 'Edit query parameter',
+              queryParams: 'Query parameter',
+              queryKey: 'Key',
+              queryValue: 'Value',
+              mapping: 'Custom mapping of thing ID to dashboard ID',
+              tableNoData: 'No entries yet',
+              addEntry: 'Add entry',
             },
             chart: {
               title: 'Chart settings',
@@ -181,6 +193,11 @@ export default function plugin(): VcsPlugin<
               fetchSuccess: 'URL query was successful.',
               fetchFailed:
                 'URL query failed. Please ensure that the URL is correct.',
+              additionalFilters: 'Additional filters',
+            },
+            validation: {
+              isNumberGreaterZero: 'Number must be greater zero.',
+              validUrl: 'Value must be a valid URL',
             },
           },
         },
@@ -190,14 +207,19 @@ export default function plugin(): VcsPlugin<
           from: 'Von',
           to: 'Bis',
           id: 'Thing ID',
-          name: 'Name des Things',
+          name: 'Name',
           observedProperty: 'Beobachtetes Merkmal',
           latestObservation: 'Letzte Beobachtung',
           limitedObservations:
-            'Anzahl der Beobachtungen erreicht Limit von: {maxObservations}. Nur die letzten {maxObservations} Beobachtungen werden angezeigt.',
+            'Anzahl der Beobachtungen erreicht Limit von: {maxObservations} für "{datastream}". Nur die ersten {maxObservations} Beobachtungen werden angezeigt.',
+          noObservations:
+            'Für die ausgewählte Zeitspanne wurden keine Daten gefunden. Bitte passen Sie diese über die Eingabeelemente an.',
           chart: {
             time: 'Zeit',
             count: 'Anzahl',
+          },
+          dashboard: {
+            openInNewTab: 'Dashboard in neuem Tab öffnen',
           },
           editors: {
             title: {
@@ -218,6 +240,13 @@ export default function plugin(): VcsPlugin<
               uploadEntries: 'Einträge aus CSV Datei hochladen',
               importFeedback: `Es wurden {numberInvalid} Zeile(n) auf Grund von ungültigen Werten und {numberDublicate} Zeile(n) auf Grund von Duplikaten herausgefiltert.`,
               dashboardUrl: 'Dashboard URL (Pfad)',
+              editQueryParams: 'Abfrage Parameter bearbeiten',
+              queryParams: 'Abfrage Parameter',
+              queryKey: 'Schlüssel',
+              queryValue: 'Wert',
+              mapping: 'Manuelle Zuordnung von Thing-ID zu Dashboard-ID',
+              tableNoData: 'Bisher keine Einträge',
+              addEntry: 'Eintrag hinzufügen',
             },
             chart: {
               title: 'Diagramm Einstellungen',
@@ -238,6 +267,11 @@ export default function plugin(): VcsPlugin<
               fetchSuccess: 'Test-Abfrage der URL war erfolgreich.',
               fetchFailed:
                 'Test-Abfrage hat fehlgeschlagen. Stellen Sie sicher, dass die URL korrekt ist.',
+              additionalFilters: 'Zusätzliche Filter',
+            },
+            validation: {
+              isNumberGreaterZero: 'Zahl muss größer Null sein.',
+              validUrl: 'Wert muss eine valide URL sein',
             },
           },
         },

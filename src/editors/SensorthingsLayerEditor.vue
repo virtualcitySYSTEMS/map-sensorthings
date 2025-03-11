@@ -178,14 +178,27 @@
             />
           </v-col>
         </v-row>
+        <v-row no-gutters>
+          <v-col>
+            <VcsLabel :html-for="`${cid}-additionalFilters`">
+              {{ $t('sensorthings.editors.layer.additionalFilters') }}
+            </VcsLabel>
+          </v-col>
+          <v-col>
+            <VcsTextField
+              :id="`${cid}-additionalFilters`"
+              clearable
+              v-model.trim="localConfig.additionalFilters"
+            >
+              <template #prepend-inner>$filter=</template>
+            </VcsTextField>
+          </v-col>
+        </v-row>
       </template>
     </ExtendedLayerSettings>
     <MapHandlingLayerSettings v-model="localConfig">
       <template #append>
-        <FeatureInfoSettings
-          v-model="localConfig.properties.featureInfo"
-          :rules="[!!localConfig.properties.featureInfo || 'error']"
-        />
+        <FeatureInfoSettings v-model="localConfig.properties.featureInfo" />
       </template>
     </MapHandlingLayerSettings>
     <DisplayLayerSettings v-model="localConfig" />

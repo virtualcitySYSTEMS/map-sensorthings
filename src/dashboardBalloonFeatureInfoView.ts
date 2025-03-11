@@ -56,7 +56,9 @@ export default class DashboardBalloonFeatureInfoView extends BalloonFeatureInfoV
     );
     const dashboardExtension =
       this._thingDashboardMapping.get(parseId(properties.featureId)) || '';
-    const src = `${renderedTemplateUrl}${dashboardExtension}`;
+    const src = renderedTemplateUrl
+      ? new URL(`${dashboardExtension}`, renderedTemplateUrl).toString()
+      : `${dashboardExtension}`;
     return {
       ...properties,
       src,

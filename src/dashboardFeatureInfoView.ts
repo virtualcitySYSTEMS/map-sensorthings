@@ -9,6 +9,7 @@ import type {
   FeatureInfoViewOptions,
   IframeFeatureInfoViewProps,
   OptionsOrRef,
+  VcsAction,
   VcsUiApp,
   WindowComponentOptions,
 } from '@vcmap/ui';
@@ -59,7 +60,9 @@ export default class DashboardFeatureInfoView extends AbstractFeatureInfoView {
     );
     const dashboardExtension =
       this._thingDashboardMapping.get(parseId(properties.featureId)) || '';
-    const src = `${renderedTemplateUrl}${dashboardExtension}`;
+    const src = renderedTemplateUrl
+      ? new URL(`${dashboardExtension}`, renderedTemplateUrl).toString()
+      : `${dashboardExtension}`;
     return {
       ...properties,
       src,
@@ -77,9 +80,31 @@ export default class DashboardFeatureInfoView extends AbstractFeatureInfoView {
       featureInfo,
       layer,
     );
-    if (!this._windowHeader && windowOptions.state) {
+    if (!windowOptions.state) {
+      windowOptions.state = {};
+    }
+    if (!this._windowHeader) {
       windowOptions.state.headerTitle = `${layer.name} - Thing: ${featureInfo.feature.getId()}`;
     }
+
+    const openInNewTabAction: VcsAction = {
+      name: 'open-dashboard-new-tab',
+      title: 'sensorthings.dashboard.openInNewTab',
+      icon: '$vcsExternalLink',
+      callback(): void {
+        if (windowOptions.props?.src) {
+          window.open(windowOptions.props.src);
+        }
+      },
+    };
+    if (!windowOptions.state.headerActions) {
+      windowOptions.state.headerActions = [openInNewTabAction];
+    } else if (Array.isArray(windowOptions.state.headerActions)) {
+      windowOptions.state.headerActions.push(openInNewTabAction);
+    } else {
+      windowOptions.state.headerActions.value.push(openInNewTabAction);
+    }
+
     return windowOptions;
   }
 

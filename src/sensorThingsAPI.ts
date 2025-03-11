@@ -91,11 +91,60 @@ export async function queryDatastreamsWithObservations(
   id: string,
   observedProperty: string,
   startDate: Date,
+  endDate: Date,
   maxObservations: number,
 ): Promise<DatastreamWithObservations[]> {
   const baseUrl = url.endsWith('/') ? url : `${url}/`;
-  const requestUrl = `${baseUrl}Things(${id})/Datastreams?$filter=ObservedProperty/name eq '${observedProperty}'&$top=1&$expand=Observations($filter=phenomenonTime ge ${startDate.toISOString()};$top=${maxObservations};$orderby=phenomenonTime desc)`;
+  const start = new Date(startDate);
+  start.setHours(0, 0, 0);
+  const end = new Date(endDate);
+  end.setDate(endDate.getDate() + 1);
+  end.setHours(0, 0, 0);
+
+  const requestUrl = `${baseUrl}Things(${id})/Datastreams?
+    $filter=ObservedProperty/name eq '${observedProperty}'&
+    $top=1&
+    $expand=Observations(
+      $filter=phenomenonTime ge ${start.toISOString()} and phenomenonTime lt ${end.toISOString()};
+      $top=${maxObservations};
+      $orderby=phenomenonTime asc)`;
   return fetchAllFromPagination(requestUrl);
+}
+
+export async function queryDatastreamWithLatestObservation(
+  url: string,
+  id: string,
+  observedProperty: string,
+): Promise<DatastreamWithObservations> {
+  const baseUrl = url.endsWith('/') ? url : `${url}/`;
+  const requestUrl = `${baseUrl}Datastreams?
+    $filter=ObservedProperty/name eq '${observedProperty}' and Thing/id eq ${id}&
+    $orderby=Observations/phenomenonTime desc&
+    $top=1&
+    $expand=Observations($top=1;$orderby=phenomenonTime desc)`;
+  const response =
+    await requestJson<SensorThingsResponse<DatastreamWithObservations>>(
+      requestUrl,
+    );
+  return response.value[0];
+}
+
+export async function queryFirstObservation(
+  url: string,
+  id: string,
+  observedProperty: string,
+): Promise<ObservationEntity> {
+  const baseUrl = url.endsWith('/') ? url : `${url}/`;
+  const requestUrl = `${baseUrl}Datastreams?
+    $filter=ObservedProperty/name eq '${observedProperty}' and Thing/id eq ${id}&
+    $orderby=Observations/phenomenonTime asc&
+    $top=1&
+    $expand=Observations($top=1;$orderby=phenomenonTime asc)`;
+  const response =
+    await requestJson<SensorThingsResponse<DatastreamWithObservations>>(
+      requestUrl,
+    );
+  return response.value[0].Observations[0];
 }
 
 export async function queryObservedProperties(
@@ -105,7 +154,11 @@ export async function queryObservedProperties(
   return fetchAllFromPagination(`${baseUrl}ObservedProperties`);
 }
 
-function createFilter(observedProperty?: string, extent?: Extent): string[] {
+function createFilter(
+  observedProperty?: string,
+  extent?: Extent,
+  additionalFilters?: string,
+): string[] {
   const filter: string[] = [];
   if (observedProperty) {
     filter.push(`Datastreams/ObservedProperty/name eq '${observedProperty}'`);
@@ -119,6 +172,9 @@ function createFilter(observedProperty?: string, extent?: Extent): string[] {
       `st_within(Locations/location, geography'POLYGON ((${xmin} ${ymin}, ${xmax} ${ymin}, ${xmax} ${ymax}, ${xmin} ${ymax}, ${xmin} ${ymin}))')`,
     );
   }
+  if (additionalFilters) {
+    filter.push(additionalFilters);
+  }
   return filter;
 }
 
@@ -126,8 +182,9 @@ export async function queryThingsWithLocations(
   url: string,
   observedProperty?: string,
   extent?: Extent,
+  additionalFilters?: string,
 ): Promise<ThingWithLocations[]> {
-  const filter = createFilter(observedProperty, extent);
+  const filter = createFilter(observedProperty, extent, additionalFilters);
   const queryOptions: string[] = [];
   if (filter.length) {
     queryOptions.push(`$filter=${filter.join(' and ')}`);

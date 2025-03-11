@@ -51,7 +51,9 @@
             placeholder="1"
             :rules="[
               (v: number) =>
-                (Number.isInteger(v) && v > 0) || v == undefined || 'error',
+                (Number.isInteger(v) && v > 0) ||
+                v == undefined ||
+                'sensorthings.editors.validation.isNumberGreaterZero',
             ]"
           />
         </v-col>

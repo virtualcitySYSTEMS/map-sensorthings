@@ -45,15 +45,14 @@
   ],
   "prettier": "@vcsuite/eslint-config/prettier.js",
   "peerDependencies": {
-    "@vcmap/core": "^6.1.0-rc.3",
-    "@vcmap/ui": "^6.1.0-rc.2",
-    "ol": "^10.2.1",
+    "@vcmap/core": "^6.1.1",
+    "@vcmap/ui": "^6.1.0",
+    "ol": "^10.4.0",
     "vue": "~3.4.38",
-    "vuetify": "^3.7.4"
+    "vuetify": "^3.7.15"
   },
   "overrides": {
-    "@vcmap/core": "^6.1.0-rc.3",
-    "@vcmap/ui": "^6.1.0-rc.2"
+    "esbuild": "^0.25.0"
   },
   "devDependencies": {
     "@vcmap/plugin-cli": "^4.0.2",
