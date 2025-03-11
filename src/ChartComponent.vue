@@ -48,7 +48,7 @@
         </v-col>
       </v-row>
     </v-container>
-    <v-row no-gutters class="pb-3">
+    <v-row no-gutters class="pb-3 pt-3 pl-1">
       <v-col>
         <apex-chart type="line" :options="chartOptions" :series="chartSeries" />
       </v-col>
@@ -197,6 +197,21 @@
             id: 'sensorthings-chart',
             locales: [de, en],
             defaultLocale: vm.$i18n.locale,
+            toolbar: {
+              export: {
+                csv: {
+                  columnDelimiter: ';',
+                  headerCategory: 'datetime',
+                  categoryFormatter(x): string | undefined {
+                    if (x !== undefined) {
+                      return new Date(x).toISOString();
+                    } else {
+                      return x;
+                    }
+                  },
+                },
+              },
+            },
           },
           xaxis: {
             type: 'datetime',
