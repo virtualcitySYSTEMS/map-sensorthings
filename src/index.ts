@@ -140,7 +140,7 @@ export default function plugin(): VcsPlugin<
           limitedObservations:
             'Number of observations reached limit of: {maxObservations} for "{datastream}". Only the first {maxObservations} observations are shown.',
           noObservations:
-            'No observations found for the requested interval. Please change time span.',
+            'No data was found for “{datastream}” for the selected time period. Please adjust time span using input elements.',
           chart: {
             time: 'Time',
             count: 'Count',
@@ -213,7 +213,7 @@ export default function plugin(): VcsPlugin<
           limitedObservations:
             'Anzahl der Beobachtungen erreicht Limit von: {maxObservations} für "{datastream}". Nur die ersten {maxObservations} Beobachtungen werden angezeigt.',
           noObservations:
-            'Für die ausgewählte Zeitspanne wurden keine Daten gefunden. Bitte passen Sie diese über die Eingabeelemente an.',
+            'Für die ausgewählte Zeitspanne wurden keine Daten für "{datastream}" gefunden. Bitte passen Sie die Zeitspanne über die Eingabeelemente an.',
           chart: {
             time: 'Zeit',
             count: 'Anzahl',

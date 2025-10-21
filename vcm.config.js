@@ -16,6 +16,21 @@ export default {
             name: 'OpenlayersMap',
           },
         ],
+        i18n: [
+          {
+            name: 'sensorthings',
+            nl: {
+              footer: {
+                title: 'nl-test',
+              },
+            },
+            uz: {
+              footer: {
+                title: 'uz-test',
+              },
+            },
+          },
+        ],
         viewpoints: [
           {
             type: 'Viewpoint',

@@ -1,3 +1,4 @@
-# v1.0.0
+# v1.0.1
 
-- initial version
+- Fixes chart bug with locales other than `de` and `en`.
+- Changes timeout of notifications from no timeout to 10 seconds.

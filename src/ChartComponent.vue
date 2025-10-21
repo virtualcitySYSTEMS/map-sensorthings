@@ -84,12 +84,11 @@
   } from 'vuetify/components';
   import ApexChart from 'vue3-apexcharts';
   import type { ApexOptions } from 'apexcharts';
-  import de from 'apexcharts/dist/locales/de.json';
-  import en from 'apexcharts/dist/locales/en.json';
   import type { VcsUiApp } from '@vcmap/ui';
   import { NotificationType, VcsDatePicker, VcsLabel } from '@vcmap/ui';
   import { getLogger } from '@vcsuite/logger';
   import { useTheme } from 'vuetify';
+  import apexLocales from './apexLocales.js';
   import type {
     SensorThingsLayer,
     ThingFeatureProperties,
@@ -195,8 +194,9 @@
         (): ApexOptions => ({
           chart: {
             id: 'sensorthings-chart',
-            locales: [de, en],
-            defaultLocale: vm.$i18n.locale,
+            locales: apexLocales,
+            defaultLocale:
+              apexLocales.find((l) => l.name === vm.$i18n.locale)?.name || 'en',
             toolbar: {
               export: {
                 csv: {
@@ -279,13 +279,15 @@
                 maxObservations,
               }),
               type: NotificationType.WARNING,
-              timeout: -1,
+              timeout: 10000,
             });
           } else if (!datastream.Observations.length) {
             app.notifier.add({
-              message: vm.$st('sensorthings.noObservations'),
+              message: vm.$st('sensorthings.noObservations', {
+                datastream: datastream.name,
+              }),
               type: NotificationType.INFO,
-              timeout: -1,
+              timeout: 10000,
             });
           }
         });
