@@ -1,3 +1,7 @@
+# v1.0.2
+
+- add vcs style nonce to apex chart
+
 # v1.0.1
 
 - Fixes chart bug with locales other than `de` and `en`.

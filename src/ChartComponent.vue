@@ -194,6 +194,8 @@
         (): ApexOptions => ({
           chart: {
             id: 'sensorthings-chart',
+            // @ts-expect-error {while functionality was already added in version 3.4, type was added in version https://github.com/apexcharts/apexcharts.js/releases/tag/v4.6.0}
+            nonce: window.vcs?.styleNonce,
             locales: apexLocales,
             defaultLocale:
               apexLocales.find((l) => l.name === vm.$i18n.locale)?.name || 'en',
