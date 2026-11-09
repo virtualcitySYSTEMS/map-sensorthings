@@ -141,6 +141,7 @@ export default function plugin(): VcsPlugin<
             'Number of observations reached limit of: {maxObservations} for "{datastream}". Only the first {maxObservations} observations are shown.',
           noObservations:
             'No data was found for “{datastream}” for the selected time period. Please adjust time span using input elements.',
+          sensor: 'Sensor',
           chart: {
             time: 'Time',
             count: 'Count',
@@ -148,6 +149,7 @@ export default function plugin(): VcsPlugin<
           dashboard: {
             openInNewTab: 'Open dashboard in new tab',
           },
+          moreInfo: 'More information',
           editors: {
             title: {
               chart: 'Sensorthings chart view - Editor',
@@ -194,6 +196,7 @@ export default function plugin(): VcsPlugin<
               fetchFailed:
                 'URL query failed. Please ensure that the URL is correct.',
               additionalFilters: 'Additional filters',
+              moreInformationLink: 'More information link (URL)',
             },
             validation: {
               isNumberGreaterZero: 'Number must be greater zero.',
@@ -214,6 +217,7 @@ export default function plugin(): VcsPlugin<
             'Anzahl der Beobachtungen erreicht Limit von: {maxObservations} für "{datastream}". Nur die ersten {maxObservations} Beobachtungen werden angezeigt.',
           noObservations:
             'Für die ausgewählte Zeitspanne wurden keine Daten für "{datastream}" gefunden. Bitte passen Sie die Zeitspanne über die Eingabeelemente an.',
+          sensor: 'Sensor',
           chart: {
             time: 'Zeit',
             count: 'Anzahl',
@@ -221,6 +225,7 @@ export default function plugin(): VcsPlugin<
           dashboard: {
             openInNewTab: 'Dashboard in neuem Tab öffnen',
           },
+          moreInfo: 'Weitere Informationen',
           editors: {
             title: {
               chart: 'Sensorthings Diagramm Darstellung - Editor',
@@ -268,6 +273,7 @@ export default function plugin(): VcsPlugin<
               fetchFailed:
                 'Test-Abfrage hat fehlgeschlagen. Stellen Sie sicher, dass die URL korrekt ist.',
               additionalFilters: 'Zusätzliche Filter',
+              moreInformationLink: 'Link zu weiteren Informationen (URL)',
             },
             validation: {
               isNumberGreaterZero: 'Zahl muss größer Null sein.',
